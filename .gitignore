@@ -1,0 +1,34 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# VSCode
+.vscode/
+
+# IDE
+.idea/
+
+# PyInstaller
+*.spec
+dist/
+build/
+
+# Logs
+*.log
+
+# Test coverage
+.coverage
+.pytest_cache/
+coverage.xml
+
+# Trae
+.trae/
