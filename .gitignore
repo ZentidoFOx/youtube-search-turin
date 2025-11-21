@@ -32,3 +32,8 @@ coverage.xml
 
 # Trae
 .trae/
+
+# Local downloads
+downloads/
+*.mp4
+*.mp3
