@@ -35,15 +35,28 @@ def video_info_query():
                 thumbs_src = item.get("thumbnails") or []
                 td, tm, th = _pick_thumbs(thumbs_src)
                 secs = _duration_seconds(item)
+                
+                # Extract description from descriptionSnippet
+                description = None
+                ds = item.get("descriptionSnippet")
+                if isinstance(ds, list) and ds:
+                    try:
+                        description = " ".join(s.get("text") for s in ds if isinstance(s, dict) and s.get("text"))
+                    except Exception:
+                        pass
+                
+                # Extract uploadDate from publishedTime
+                upload_date = item.get("publishedTime")
+                
                 result = {
                     "id": video_id,
                     "title": item.get("title"),
-                    "description": None,
+                    "description": description,
                     "duration": _duration_text(item),
                     "thumbDefault": td,
                     "thumbMedium": tm,
                     "thumbHigh": th,
-                    "uploadDate": None,
+                    "uploadDate": upload_date,
                     "viewCount": _parse_views((item.get("viewCount") or {}).get("text")),
                     "category": None,
                     "estimatedMp3SizeMB": _estimate_mp3_sizes(secs)
