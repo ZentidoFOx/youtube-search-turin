@@ -112,4 +112,32 @@ def video_info_query():
         "category": info.get("category"),
         "estimatedMp3SizeMB": _estimate_mp3_sizes(secs)
     }
+    if result["description"] is None or result["category"] is None or result["uploadDate"] is None or (result["thumbDefault"] is None and result["thumbMedium"] is None and result["thumbHigh"] is None):
+        try:
+            data = VideosSearch(video_id, limit=1).result()
+            item = None
+            if isinstance(data, dict):
+                items = data.get("result") or []
+                if isinstance(items, list) and items:
+                    item = items[0]
+            if item:
+                if result["description"] is None:
+                    ds = item.get("descriptionSnippet")
+                    if isinstance(ds, list) and ds:
+                        try:
+                            result["description"] = " ".join(s.get("text") for s in ds if isinstance(s, dict) and s.get("text"))
+                        except Exception:
+                            pass
+                if result["uploadDate"] is None:
+                    pt = item.get("publishedTime")
+                    if isinstance(pt, str) and pt:
+                        result["uploadDate"] = pt
+                if result["thumbDefault"] is None and result["thumbMedium"] is None and result["thumbHigh"] is None:
+                    tsrc = item.get("thumbnails") or []
+                    td2, tm2, th2 = _pick_thumbs(tsrc)
+                    result["thumbDefault"] = td2
+                    result["thumbMedium"] = tm2
+                    result["thumbHigh"] = th2
+        except Exception:
+            pass
     return jsonify(result)
