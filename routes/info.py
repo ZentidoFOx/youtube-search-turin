@@ -7,9 +7,13 @@ bp = Blueprint("info", __name__)
 
  
 
-@bp.get("/info")
+@bp.route("/info", methods=["GET", "POST"])
 def video_info_query():
     video_id = request.args.get("id", type=str)
+    if not video_id and request.is_json:
+        video_id = (request.get_json(silent=True) or {}).get("id")
+    if not video_id:
+        video_id = request.form.get("id")
     if not video_id:
         return jsonify({"error": "missing id"}), 400
     url = f"https://www.youtube.com/watch?v={video_id}"

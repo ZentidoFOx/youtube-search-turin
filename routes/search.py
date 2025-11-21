@@ -4,10 +4,26 @@ from .utils import _pick_thumbs, _parse_views
 
 bp = Blueprint("search", __name__)
 
-@bp.get("/search/videos")
+@bp.route("/search/videos", methods=["GET", "POST"])
 def search_videos():
     q = request.args.get("q", type=str)
+    if not q and request.is_json:
+        q = (request.get_json(silent=True) or {}).get("q")
+    if not q:
+        q = request.form.get("q")
     limit = request.args.get("limit", default=5, type=int)
+    if (limit is None) and request.is_json:
+        lv = (request.get_json(silent=True) or {}).get("limit")
+        try:
+            limit = int(lv) if lv is not None else 5
+        except Exception:
+            limit = 5
+    if limit is None:
+        lv = request.form.get("limit")
+        try:
+            limit = int(lv) if lv is not None else 5
+        except Exception:
+            limit = 5
     if not q:
         return jsonify({"error": "missing q"}), 400
     try:
