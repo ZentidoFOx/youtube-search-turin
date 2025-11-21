@@ -29,11 +29,11 @@ def _pick_thumbs(thumbnails):
                 m = u.replace("/hqdefault", "/mqdefault").replace("/default", "/mqdefault")
                 h = u.replace("/mqdefault", "/hqdefault").replace("/default", "/hqdefault")
                 return d, m, h
-            return u, u, u
-        low = thumbs[0]
-        mid = thumbs[len(thumbs)//2]
-        high = thumbs[-1]
-        return low.get("url"), mid.get("url"), high.get("url")
+            return None, None, None
+        low = thumbs[0].get("url")
+        mid = thumbs[len(thumbs)//2].get("url")
+        high = thumbs[-1].get("url")
+        return (low if isinstance(low, str) else None), (mid if isinstance(mid, str) else None), (high if isinstance(high, str) else None)
     except Exception:
         return None, None, None
 

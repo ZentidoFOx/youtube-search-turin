@@ -43,15 +43,32 @@ def video_info_query():
     if not category:
         category = info.get("videoDetails", {}).get("category")
     
+    # Safely extract values, ensuring no None concatenation
+    title = info.get("title")
+    if not isinstance(title, str):
+        title = None
+    
+    description = info.get("description") or info.get("shortDescription")
+    if not isinstance(description, str):
+        description = None
+    
+    duration = _duration_text(info)
+    if not isinstance(duration, str):
+        duration = None
+    
+    upload_date = info.get("uploadDate") or info.get("publishDate") or info.get("publishedTime") or info.get("dateText")
+    if not isinstance(upload_date, str):
+        upload_date = None
+    
     result = {
         "id": video_id,
-        "title": info.get("title"),
-        "description": info.get("description") or info.get("shortDescription"),
-        "duration": _duration_text(info),
+        "title": title,
+        "description": description,
+        "duration": duration,
         "thumbDefault": td,
         "thumbMedium": tm,
         "thumbHigh": th,
-        "uploadDate": info.get("uploadDate") or info.get("publishDate") or info.get("publishedTime") or info.get("dateText"),
+        "uploadDate": upload_date,
         "viewCount": _view_count_from_info(info),
         "category": category,
         "estimatedMp3SizeMB": _estimate_mp3_sizes(secs)
