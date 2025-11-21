@@ -9,11 +9,17 @@ def _parse_views(text):
 def _pick_thumbs(thumbnails):
     if not thumbnails:
         return None, None, None
-    thumbs = sorted(thumbnails, key=lambda t: t.get("width", 0))
-    low = thumbs[0]
-    mid = thumbs[len(thumbs)//2]
-    high = thumbs[-1]
-    return low.get("url"), mid.get("url"), high.get("url")
+    try:
+        thumbs = [t for t in thumbnails if isinstance(t, dict)]
+        if not thumbs:
+            return None, None, None
+        thumbs = sorted(thumbs, key=lambda t: (t.get("width") or 0, t.get("height") or 0))
+        low = thumbs[0]
+        mid = thumbs[len(thumbs)//2]
+        high = thumbs[-1]
+        return low.get("url"), mid.get("url"), high.get("url")
+    except Exception:
+        return None, None, None
 
 def _duration_text(info):
     def fmt(secs):
