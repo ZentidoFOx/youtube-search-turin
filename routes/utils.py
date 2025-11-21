@@ -39,57 +39,65 @@ def _pick_thumbs(thumbnails):
 
 def _duration_text(info):
     def fmt(secs):
-        h = secs // 3600
-        m = (secs % 3600) // 60
-        s = secs % 60
-        return f"{h}:{m:02d}:{s:02d}" if h else f"{m}:{s:02d}"
+        try:
+            h = int(secs) // 3600
+            m = (int(secs) % 3600) // 60
+            s = int(secs) % 60
+            return f"{h}:{m:02d}:{s:02d}" if h else f"{m}:{s:02d}"
+        except (TypeError, ValueError):
+            return None
 
     if not isinstance(info, dict):
         return None
 
-    d = info.get("duration")
-    if isinstance(d, str) and d.strip():
-        return d.strip()
-    if isinstance(d, dict):
-        txt = d.get("text")
-        if isinstance(txt, str) and txt.strip():
-            return txt.strip()
-        st = d.get("secondsText")
-        if st is not None:
+    try:
+        d = info.get("duration")
+        if isinstance(d, str) and d.strip():
+            return d.strip()
+        if isinstance(d, dict):
+            txt = d.get("text")
+            if isinstance(txt, str) and txt.strip():
+                return txt.strip()
+            st = d.get("secondsText")
+            if st is not None:
+                try:
+                    st_str = str(st).strip() if st else None
+                    if st_str:
+                        secs = int(st_str)
+                        return fmt(secs)
+                except (TypeError, ValueError):
+                    pass
+
+        ls = info.get("lengthSeconds")
+        if ls is not None:
             try:
-                secs = int(str(st).strip())
+                secs = int(ls)
                 return fmt(secs)
-            except Exception:
+            except (TypeError, ValueError):
                 pass
 
-    ls = info.get("lengthSeconds")
-    if ls is not None:
-        try:
-            secs = int(ls)
-            return fmt(secs)
-        except Exception:
-            pass
+        acc = info.get("accessibility")
+        if isinstance(acc, dict):
+            acc_dur = acc.get("duration")
+            if isinstance(acc_dur, str):
+                m = re.search(r"(?:(\d+)\s*hours?)?.*?(?:(\d+)\s*minutes?)?.*?(?:(\d+)\s*seconds?)?", acc_dur, re.IGNORECASE)
+                if m:
+                    h = int(m.group(1) or 0)
+                    mi = int(m.group(2) or 0)
+                    s = int(m.group(3) or 0)
+                    secs = h*3600 + mi*60 + s
+                    if secs > 0:
+                        return fmt(secs)
 
-    acc = info.get("accessibility")
-    if isinstance(acc, dict):
-        acc_dur = acc.get("duration")
-        if isinstance(acc_dur, str):
-            m = re.search(r"(?:(\d+)\s*hours?)?.*?(?:(\d+)\s*minutes?)?.*?(?:(\d+)\s*seconds?)?", acc_dur, re.IGNORECASE)
-            if m:
-                h = int(m.group(1) or 0)
-                mi = int(m.group(2) or 0)
-                s = int(m.group(3) or 0)
-                secs = h*3600 + mi*60 + s
-                if secs > 0:
-                    return fmt(secs)
-
-    ds = info.get("durationSeconds")
-    if ds is not None:
-        try:
-            secs = int(ds)
-            return fmt(secs)
-        except Exception:
-            pass
+        ds = info.get("durationSeconds")
+        if ds is not None:
+            try:
+                secs = int(ds)
+                return fmt(secs)
+            except (TypeError, ValueError):
+                pass
+    except Exception:
+        pass
 
     return None
 
