@@ -58,17 +58,44 @@ def video_info_query():
         return jsonify({"error": "missing id"}), 400
     url = f"https://www.youtube.com/watch?v={video_id}"
     info = None
-    err = None
+    errs = []
     try:
-        info = Video.get(url, mode=ResultMode.json, get_upload_date=True)
+        info = Video.getInfo(url, mode=ResultMode.json)
     except Exception as e:
-        err = str(e)
+        errs.append(str(e))
         try:
-            info = Video.getInfo(url, mode=ResultMode.json)
+            info = Video.get(url, mode=ResultMode.json)
         except Exception as e2:
-            err = f"{err} | {str(e2)}"
+            errs.append(str(e2))
     if info is None:
-        return jsonify({"error": err or "failed to fetch video info", "id": video_id}), 502
+        try:
+            data = VideosSearch(video_id, limit=1).result()
+            item = None
+            if isinstance(data, dict):
+                items = data.get("result") or []
+                if isinstance(items, list) and items:
+                    item = items[0]
+            if item:
+                thumbs_src = item.get("thumbnails") or []
+                td, tm, th = _pick_thumbs(thumbs_src)
+                secs = _duration_seconds(item)
+                result = {
+                    "id": video_id,
+                    "title": item.get("title"),
+                    "description": None,
+                    "duration": _duration_text(item),
+                    "thumbDefault": td,
+                    "thumbMedium": tm,
+                    "thumbHigh": th,
+                    "uploadDate": None,
+                    "viewCount": _parse_views((item.get("viewCount") or {}).get("text")),
+                    "category": None,
+                    "estimatedMp3SizeMB": _estimate_mp3_sizes(secs)
+                }
+                return jsonify(result)
+        except Exception as e3:
+            errs.append(str(e3))
+        return jsonify({"error": " | ".join(errs) or "failed to fetch video info", "id": video_id}), 502
     thumbs_src = info.get("thumbnails") or info.get("videoThumbnails") or []
     td, tm, th = _pick_thumbs(thumbs_src)
     secs = _duration_seconds(info)
