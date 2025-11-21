@@ -17,6 +17,14 @@ def _pick_thumbs(thumbnails):
         if len(thumbs) == 1:
             u = thumbs[0].get("url")
             if isinstance(u, str):
+                m = re.search(r"/vi/([^/]+)/", u)
+                vid = m.group(1) if m else None
+                if vid and ("hq720" in u or "sddefault" in u or "maxresdefault" in u):
+                    base = f"https://i.ytimg.com/vi/{vid}"
+                    d = f"{base}/default.jpg"
+                    m2 = f"{base}/mqdefault.jpg"
+                    h = f"{base}/hqdefault.jpg"
+                    return d, m2, h
                 d = u.replace("/hqdefault", "/default").replace("/mqdefault", "/default")
                 m = u.replace("/hqdefault", "/mqdefault").replace("/default", "/mqdefault")
                 h = u.replace("/mqdefault", "/hqdefault").replace("/default", "/hqdefault")
