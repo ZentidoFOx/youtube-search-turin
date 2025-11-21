@@ -1,6 +1,6 @@
 import os
 from flask import Blueprint, request, jsonify
-from youtubesearchpython import Video, ResultMode
+from youtubesearchpython import Video, ResultMode, VideosSearch
 from .utils import _pick_thumbs, _duration_text, _view_count_from_info, _duration_seconds, _estimate_mp3_sizes
 
 bp = Blueprint("info", __name__)
@@ -26,6 +26,36 @@ def video_info_query():
         except Exception as e2:
             errs.append(f"Video.getInfo failed: {str(e2)}")
     if info is None:
+        try:
+            data = VideosSearch(video_id, limit=1).result()
+            item = None
+            if isinstance(data, dict):
+                items = data.get("result") or []
+                if isinstance(items, list) and items:
+                    item = items[0]
+            if item:
+                thumbs_src = item.get("thumbnails") or []
+                td, tm, th = _pick_thumbs(thumbs_src)
+                secs = _duration_seconds(item)
+                vc = item.get("viewCount")
+                vc_text = vc.get("text") if isinstance(vc, dict) else (str(vc) if vc is not None else None)
+                result = {
+                    "id": video_id,
+                    "title": item.get("title"),
+                    "description": None,
+                    "duration": _duration_text(item),
+                    "thumbDefault": td,
+                    "thumbMedium": tm,
+                    "thumbHigh": th,
+                    "uploadDate": item.get("publishedTime"),
+                    "viewCount": _view_count_from_info({"viewCount": {"text": vc_text}}),
+                    "category": None,
+                    "estimatedMp3SizeMB": _estimate_mp3_sizes(secs),
+                    "warning": " | ".join(errs) if errs else None
+                }
+                return jsonify(result)
+        except Exception as e3:
+            errs.append(str(e3))
         base = f"https://i.ytimg.com/vi/{video_id}"
         td = f"{base}/default.jpg"
         tm = f"{base}/mqdefault.jpg"
