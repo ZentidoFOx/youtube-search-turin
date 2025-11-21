@@ -14,6 +14,14 @@ def _pick_thumbs(thumbnails):
         if not thumbs:
             return None, None, None
         thumbs = sorted(thumbs, key=lambda t: (t.get("width") or 0, t.get("height") or 0))
+        if len(thumbs) == 1:
+            u = thumbs[0].get("url")
+            if isinstance(u, str):
+                d = u.replace("/hqdefault", "/default").replace("/mqdefault", "/default")
+                m = u.replace("/hqdefault", "/mqdefault").replace("/default", "/mqdefault")
+                h = u.replace("/mqdefault", "/hqdefault").replace("/default", "/hqdefault")
+                return d, m, h
+            return u, u, u
         low = thumbs[0]
         mid = thumbs[len(thumbs)//2]
         high = thumbs[-1]

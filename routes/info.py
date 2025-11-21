@@ -60,11 +60,11 @@ def video_info_query():
     info = None
     errs = []
     try:
-        info = Video.getInfo(url, mode=ResultMode.json)
+        info = Video.get(url, mode=ResultMode.json, get_upload_date=True)
     except Exception as e:
         errs.append(str(e))
         try:
-            info = Video.get(url, mode=ResultMode.json)
+            info = Video.getInfo(url, mode=ResultMode.json)
         except Exception as e2:
             errs.append(str(e2))
     if info is None:
