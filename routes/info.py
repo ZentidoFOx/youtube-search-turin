@@ -39,10 +39,17 @@ def video_info_query():
                 secs = _duration_seconds(item)
                 vc = item.get("viewCount")
                 vc_text = vc.get("text") if isinstance(vc, dict) else (str(vc) if vc is not None else None)
+                desc = None
+                ds = item.get("descriptionSnippet")
+                if isinstance(ds, list) and ds:
+                    try:
+                        desc = " ".join(s.get("text") for s in ds if isinstance(s, dict) and s.get("text"))
+                    except Exception:
+                        pass
                 result = {
                     "id": video_id,
                     "title": item.get("title"),
-                    "description": None,
+                    "description": desc,
                     "duration": _duration_text(item),
                     "thumbDefault": td,
                     "thumbMedium": tm,
