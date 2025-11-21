@@ -11,25 +11,28 @@ def search_videos():
     limit = request.args.get("limit", default=5, type=int)
     if not q:
         return jsonify({"error": "missing q"}), 400
-    search = VideosSearch(q, limit=limit)
-    data = search.result()
-    items = data.get("result", [])
-    videos = []
-    for item in items:
-        thumb_default, thumb_medium, thumb_high = _pick_thumbs(item.get("thumbnails") or [])
-        videos.append({
-            "id": item.get("id"),
-            "title": item.get("title"),
-            "thumbDefault": thumb_default,
-            "thumbMedium": thumb_medium,
-            "thumbHigh": thumb_high,
-            "channelTitle": (item.get("channel") or {}).get("name"),
-            "channelId": (item.get("channel") or {}).get("id"),
-            "publishedAt": item.get("publishedTime"),
-            "duration": item.get("duration"),
-            "viewCount": _parse_views((item.get("viewCount") or {}).get("text"))
-        })
-    return jsonify({"videos": videos})
+    try:
+        search = VideosSearch(q, limit=limit)
+        data = search.result()
+        items = data.get("result", [])
+        videos = []
+        for item in items:
+            thumb_default, thumb_medium, thumb_high = _pick_thumbs(item.get("thumbnails") or [])
+            videos.append({
+                "id": item.get("id"),
+                "title": item.get("title"),
+                "thumbDefault": thumb_default,
+                "thumbMedium": thumb_medium,
+                "thumbHigh": thumb_high,
+                "channelTitle": (item.get("channel") or {}).get("name"),
+                "channelId": (item.get("channel") or {}).get("id"),
+                "publishedAt": item.get("publishedTime"),
+                "duration": item.get("duration"),
+                "viewCount": _parse_views((item.get("viewCount") or {}).get("text"))
+            })
+        return jsonify({"videos": videos})
+    except Exception as e:
+        return jsonify({"error": str(e), "q": q, "limit": limit}), 502
 
 @bp.get("/info")
 def video_info_query():
